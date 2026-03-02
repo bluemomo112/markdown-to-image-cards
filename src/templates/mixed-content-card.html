@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .card {
+      width: 1440px;
+      height: 2400px;
+      background-color: {{backgroundColor}};
+      color: {{textColor}};
+      padding: 130px 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .content-wrapper {
+      width: 100%;
+      max-height: 2140px; /* 2400 - 260 (padding) */
+    }
+
+    .text-block {
+      font-size: 60px;
+      line-height: 1.9;
+      text-align: justify;
+      text-justify: inter-character;
+      margin-bottom: 40px;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .text-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .image-block {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 60px 0;
+    }
+
+    .image-block:first-child {
+      margin-top: 0;
+    }
+
+    .image-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .image-block img {
+      max-width: 100%;
+      max-height: 1800px; /* 限制图片最大高度 */
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="content-wrapper">
+      {{content}}
+    </div>
+  </div>
+</body>
+</html>

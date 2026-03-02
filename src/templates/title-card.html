@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1440px;
+      height: 2400px;
+      overflow: hidden;
+    }
+
+    .title-card {
+      width: 1440px;
+      height: 2400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px;
+      background-color: {{background}};
+    }
+
+    .title-text {
+      font-size: {{fontSize}}px;
+      line-height: 1.6;
+      color: {{textColor}};
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+      text-align: center;
+      word-break: break-word;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+  <div class="title-card">
+    <div class="title-text">{{title}}</div>
+  </div>
+</body>
+</html>
