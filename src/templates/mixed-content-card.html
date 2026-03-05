@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown.min.css">
   <style>
     * {
       margin: 0;
@@ -32,20 +33,148 @@
       max-height: 2140px; /* 2400 - 260 (padding) */
     }
 
-    .text-block {
-      font-size: 60px;
-      line-height: 1.9;
-      text-align: justify;
-      text-justify: inter-character;
-      margin-bottom: 40px;
-      word-break: break-word;
-      white-space: pre-wrap;
+    /* GitHub Markdown 样式覆盖 */
+    .markdown-body {
+      font-size: 48px !important;
+      line-height: 1.8 !important;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: {{textColor}};
+      background-color: transparent !important;
     }
 
-    .text-block:last-child {
+    /* 段落样式 */
+    .markdown-body p {
+      margin-bottom: 40px;
+      text-align: justify;
+      text-justify: inter-character;
+      word-break: break-word;
+    }
+
+    .markdown-body p:last-child {
       margin-bottom: 0;
     }
 
+    /* 标题样式 */
+    .markdown-body h1 {
+      font-size: 72px;
+      margin-bottom: 50px;
+      font-weight: bold;
+    }
+
+    .markdown-body h2 {
+      font-size: 64px;
+      margin-bottom: 45px;
+      font-weight: bold;
+    }
+
+    .markdown-body h3 {
+      font-size: 56px;
+      margin-bottom: 40px;
+      font-weight: bold;
+    }
+
+    .markdown-body h4,
+    .markdown-body h5,
+    .markdown-body h6 {
+      font-size: 52px;
+      margin-bottom: 35px;
+      font-weight: bold;
+    }
+
+    /* 代码块样式 */
+    .markdown-body pre {
+      background-color: #f6f8fa !important;
+      padding: 30px !important;
+      border-radius: 12px !important;
+      font-size: 42px !important;
+      line-height: 1.6 !important;
+      overflow-x: visible !important;
+      overflow-wrap: break-word !important;
+      word-wrap: break-word !important;
+      white-space: pre-wrap !important;
+      margin-bottom: 40px !important;
+    }
+
+    .markdown-body code {
+      font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+      background-color: #f6f8fa !important;
+      padding: 4px 8px !important;
+      border-radius: 6px !important;
+      font-size: 44px !important;
+    }
+
+    .markdown-body pre code {
+      background-color: transparent !important;
+      padding: 0 !important;
+      font-size: 42px !important;
+      white-space: pre-wrap !important;
+      word-break: break-all !important;
+    }
+
+    /* 超长代码块自动缩小 */
+    .markdown-body pre.oversized {
+      font-size: 32px !important;
+    }
+
+    .markdown-body pre.oversized code {
+      font-size: 32px !important;
+    }
+
+    /* 列表样式 */
+    .markdown-body ul,
+    .markdown-body ol {
+      padding-left: 60px;
+      margin-bottom: 40px;
+    }
+
+    .markdown-body li {
+      margin-bottom: 20px;
+      font-size: 48px;
+      line-height: 1.8;
+    }
+
+    /* 粗体、斜体 */
+    .markdown-body strong {
+      font-weight: bold;
+    }
+
+    .markdown-body em {
+      font-style: italic;
+    }
+
+    /* 引用 */
+    .markdown-body blockquote {
+      border-left: 8px solid #dfe2e5;
+      padding-left: 40px;
+      color: #6a737d;
+      margin-bottom: 40px;
+    }
+
+    /* 表格样式 */
+    .markdown-body table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 40px;
+      font-size: 42px;
+    }
+
+    .markdown-body th,
+    .markdown-body td {
+      border: 2px solid #dfe2e5;
+      padding: 20px 30px;
+      text-align: left;
+    }
+
+    .markdown-body th {
+      background-color: #f6f8fa;
+      font-weight: bold;
+    }
+
+    .markdown-body tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    /* 图片样式 */
     .image-block {
       width: 100%;
       display: flex;
@@ -67,12 +196,23 @@
       height: auto;
       display: block;
     }
+
+    /* HTML 块样式 */
+    .html-block {
+      margin-bottom: 0;
+    }
+
+    .html-block:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="content-wrapper">
-      {{content}}
+      <div class="markdown-body">
+        {{content}}
+      </div>
     </div>
   </div>
 </body>

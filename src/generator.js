@@ -31,11 +31,10 @@ export async function generateCards(options) {
   const outputPath = path.resolve(process.cwd(), outputDir);
   await fs.mkdir(outputPath, { recursive: true });
 
-  // 启动浏览器（优先使用系统 Chrome）
+  // 启动浏览器
   console.log('🚀 启动浏览器...');
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
@@ -202,6 +201,8 @@ export async function generateCardsFromMarkdown(options) {
 async function generateMixedContentCards(browser, blocks, theme, outputPath) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 2400 });
+  // 增加导航超时时间以处理大文档
+  await page.setDefaultNavigationTimeout(120000); // 120秒
 
   // 读取模板
   const templatePath = path.join(__dirname, 'templates', 'mixed-content-card.html');
@@ -215,7 +216,12 @@ async function generateMixedContentCards(browser, blocks, theme, outputPath) {
   let remainingBlocks = [...blocks];
 
   while (remainingBlocks.length > 0) {
-    const block = remainingBlocks.shift();
+    let block = remainingBlocks.shift();
+
+    // 检查是否为超长代码块
+    if (block.type === 'html' && block.isAtomic && block.content.includes('<pre>')) {
+      block = await handleOversizedCodeBlock(page, template, block, maxHeight);
+    }
 
     // 尝试添加当前块到页面
     const testBlocks = [...currentPageBlocks, block];
@@ -226,8 +232,8 @@ async function generateMixedContentCards(browser, blocks, theme, outputPath) {
       currentPageBlocks.push(block);
     } else if (currentPageBlocks.length === 0) {
       // 当前页为空但单个块就超出了
-      if (block.type === 'text') {
-        // 文本块需要拆分
+      if (block.type === 'html' && !block.isAtomic) {
+        // 非原子 HTML 块需要拆分
         const { fit, overflow } = await splitTextBlock(page, template, currentPageBlocks, block, maxHeight);
         if (fit) {
           currentPageBlocks.push(fit);
@@ -241,7 +247,7 @@ async function generateMixedContentCards(browser, blocks, theme, outputPath) {
           remainingBlocks.unshift(overflow);
         }
       } else {
-        // 图片块，直接放（CSS 会限制 max-height）
+        // 原子块或图片块，直接放（CSS 会限制 max-height）
         currentPageBlocks.push(block);
         const filepath = await renderMixedContentCard(page, template, currentPageBlocks, theme, outputPath, generatedFiles.length + 1);
         generatedFiles.push(filepath);
@@ -249,7 +255,7 @@ async function generateMixedContentCards(browser, blocks, theme, outputPath) {
       }
     } else {
       // 当前页有内容但放不下新块
-      if (block.type === 'text') {
+      if (block.type === 'html' && !block.isAtomic) {
         // 尝试拆分文本，先填满当前页
         const { fit, overflow } = await splitTextBlock(page, template, currentPageBlocks, block, maxHeight);
         if (fit) {
@@ -264,7 +270,7 @@ async function generateMixedContentCards(browser, blocks, theme, outputPath) {
           remainingBlocks.unshift(overflow);
         }
       } else {
-        // 图片放不下，先生成当前页，图片放到下一页
+        // 原子块或图片放不下，先生成当前页，块放到下一页
         const filepath = await renderMixedContentCard(page, template, currentPageBlocks, theme, outputPath, generatedFiles.length + 1);
         generatedFiles.push(filepath);
         currentPageBlocks = [];
@@ -284,21 +290,56 @@ async function generateMixedContentCards(browser, blocks, theme, outputPath) {
 }
 
 /**
+ * 处理超长代码块：自动缩小字体
+ */
+async function handleOversizedCodeBlock(page, template, block, maxHeight) {
+  // 测量原始高度
+  const originalHeight = await measureContentHeight(page, template, [block]);
+
+  if (originalHeight <= maxHeight) {
+    return block;
+  }
+
+  console.warn(`⚠️  代码块过长（${originalHeight}px > ${maxHeight}px），自动缩小字体`);
+
+  // 添加 oversized 类
+  const modifiedContent = block.content.replace(
+    /<pre>/,
+    '<pre class="oversized">'
+  );
+
+  return { ...block, content: modifiedContent };
+}
+
+/**
  * 拆分文本块：找到能放入当前页的最大文本量
  * 使用二分查找 + 优先在句号/换行处断开
  */
-async function splitTextBlock(page, template, currentPageBlocks, textBlock, maxHeight) {
-  const text = textBlock.content;
+async function splitTextBlock(page, template, currentPageBlocks, htmlBlock, maxHeight) {
+  // 代码块、列表等原子块不拆分
+  if (htmlBlock.isAtomic) {
+    return { fit: null, overflow: htmlBlock };
+  }
+
+  // 只拆分普通段落（<p> 标签）
+  const textContent = htmlBlock.content.replace(/<[^>]+>/g, '');
 
   // 二分查找能放入的最大字符数
   let low = 1;
-  let high = text.length;
+  let high = textContent.length;
   let bestFit = 0;
 
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
-    const testText = text.substring(0, mid);
-    const testBlocks = [...currentPageBlocks, { type: 'text', content: testText }];
+    const testText = textContent.substring(0, mid);
+
+    // 重新构建 HTML
+    const testHtml = htmlBlock.content.replace(
+      /(<p>)(.*?)(<\/p>)/,
+      `$1${testText}$3`
+    );
+
+    const testBlocks = [...currentPageBlocks, { ...htmlBlock, content: testHtml }];
     const testHeight = await measureContentHeight(page, template, testBlocks);
 
     if (testHeight <= maxHeight) {
@@ -311,17 +352,17 @@ async function splitTextBlock(page, template, currentPageBlocks, textBlock, maxH
 
   if (bestFit === 0) {
     // 一个字都放不下
-    return { fit: null, overflow: textBlock };
+    return { fit: null, overflow: htmlBlock };
   }
 
-  if (bestFit >= text.length) {
+  if (bestFit >= textContent.length) {
     // 全部放得下
-    return { fit: textBlock, overflow: null };
+    return { fit: htmlBlock, overflow: null };
   }
 
   // 尝试在句号、换行等自然断点处断开
   let splitPoint = bestFit;
-  const searchRange = text.substring(Math.max(0, bestFit - 50), bestFit);
+  const searchRange = textContent.substring(Math.max(0, bestFit - 50), bestFit);
   const breakPoints = /[。！？\n]/g;
   let lastBreak = -1;
   let match;
@@ -334,12 +375,18 @@ async function splitTextBlock(page, template, currentPageBlocks, textBlock, maxH
     splitPoint = Math.max(0, bestFit - 50) + lastBreak + 1;
   }
 
-  const fitText = text.substring(0, splitPoint).trim();
-  const overflowText = text.substring(splitPoint).trim();
+  const fitText = textContent.substring(0, splitPoint).trim();
+  const overflowText = textContent.substring(splitPoint).trim();
 
   return {
-    fit: fitText ? { ...textBlock, content: fitText } : null,
-    overflow: overflowText ? { ...textBlock, content: overflowText } : null
+    fit: fitText ? {
+      ...htmlBlock,
+      content: htmlBlock.content.replace(/(<p>)(.*?)(<\/p>)/, `$1${fitText}$3`)
+    } : null,
+    overflow: overflowText ? {
+      ...htmlBlock,
+      content: htmlBlock.content.replace(/(<p>)(.*?)(<\/p>)/, `$1${overflowText}$3`)
+    } : null
   };
 }
 
@@ -350,15 +397,15 @@ async function measureContentHeight(page, template, blocks) {
   let contentHtml = '';
 
   for (const block of blocks) {
-    if (block.type === 'text') {
-      contentHtml += `<div class="text-block">${block.content}</div>`;
+    if (block.type === 'html') {
+      contentHtml += `<div class="html-block">${block.content}</div>`;
     } else if (block.type === 'image') {
       contentHtml += `<div class="image-block"><img src="${block.base64}" alt="${block.alt || ''}" /></div>`;
     }
   }
 
   const html = template.replace('{{content}}', contentHtml);
-  await page.setContent(html);
+  await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
   // 获取 content-wrapper 的实际高度
   const height = await page.evaluate(() => {
@@ -377,15 +424,15 @@ async function renderMixedContentCard(page, template, blocks, theme, outputPath,
   let contentHtml = '';
 
   for (const block of blocks) {
-    if (block.type === 'text') {
-      contentHtml += `<div class="text-block">${block.content}</div>`;
+    if (block.type === 'html') {
+      contentHtml += `<div class="html-block">${block.content}</div>`;
     } else if (block.type === 'image') {
       contentHtml += `<div class="image-block"><img src="${block.base64}" alt="${block.alt || ''}" /></div>`;
     }
   }
 
   const html = template.replace('{{content}}', contentHtml);
-  await page.setContent(html);
+  await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
   // 截图
   const timestamp = Date.now();

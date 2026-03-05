@@ -66,7 +66,7 @@ async function downloadImage(url) {
 }
 
 /**
- * 清理 Markdown 格式标记
+ * 清理 Markdown 格式标记（用于直接输入文字场景）
  */
 function cleanMarkdownFormatting(text) {
   return text
@@ -80,6 +80,62 @@ function cleanMarkdownFormatting(text) {
     // 移除链接，保留文字
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .trim();
+}
+
+/**
+ * 将 Markdown token 转换为 HTML（用于 Markdown 文件场景）
+ */
+function tokenToHtml(token) {
+  switch (token.type) {
+    case 'paragraph':
+      return `<p>${marked.parseInline(token.text)}</p>`;
+
+    case 'heading':
+      return `<h${token.depth}>${marked.parseInline(token.text)}</h${token.depth}>`;
+
+    case 'code':
+      // 不使用语法高亮，只添加基础样式
+      const escapedCode = token.text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return `<pre><code class="language-${token.lang || 'plaintext'}">${escapedCode}</code></pre>`;
+
+    case 'list':
+      const tag = token.ordered ? 'ol' : 'ul';
+      const items = token.items.map(item =>
+        `<li>${marked.parseInline(item.text)}</li>`
+      ).join('');
+      return `<${tag}>${items}</${tag}>`;
+
+    case 'blockquote':
+      return `<blockquote>${marked.parse(token.text)}</blockquote>`;
+
+    case 'table':
+      // 构建表格 HTML
+      let tableHtml = '<table><thead><tr>';
+
+      // 表头
+      token.header.forEach(cell => {
+        tableHtml += `<th>${marked.parseInline(cell.text)}</th>`;
+      });
+      tableHtml += '</tr></thead><tbody>';
+
+      // 表格行
+      token.rows.forEach(row => {
+        tableHtml += '<tr>';
+        row.forEach(cell => {
+          tableHtml += `<td>${marked.parseInline(cell.text)}</td>`;
+        });
+        tableHtml += '</tr>';
+      });
+
+      tableHtml += '</tbody></table>';
+      return tableHtml;
+
+    default:
+      return '';
+  }
 }
 
 /**
@@ -107,15 +163,15 @@ export async function parseMarkdown(mdFilePath) {
       while ((match = imageRegex.exec(token.text)) !== null) {
         hasImage = true;
 
-        // 添加图片前的文字
+        // 添加图片前的文字（转为 HTML）
         if (match.index > lastIndex) {
-          const textBefore = cleanMarkdownFormatting(
-            token.text.substring(lastIndex, match.index)
-          );
+          const textBefore = token.text.substring(lastIndex, match.index).trim();
           if (textBefore && !seenContent.has(textBefore)) {
+            const htmlContent = `<p>${marked.parseInline(textBefore)}</p>`;
             blocks.push({
-              type: 'text',
-              content: textBefore
+              type: 'html',
+              content: htmlContent,
+              isAtomic: false
             });
             seenContent.add(textBefore);
           }
@@ -170,39 +226,75 @@ export async function parseMarkdown(mdFilePath) {
 
       // 添加剩余文字或整段文字（如果没有图片）
       if (lastIndex < token.text.length || !hasImage) {
-        const textContent = cleanMarkdownFormatting(
-          hasImage ? token.text.substring(lastIndex) : token.text
-        );
+        const textContent = hasImage ? token.text.substring(lastIndex).trim() : token.text.trim();
         if (textContent && !seenContent.has(textContent)) {
+          const htmlContent = `<p>${marked.parseInline(textContent)}</p>`;
           blocks.push({
-            type: 'text',
-            content: textContent
+            type: 'html',
+            content: htmlContent,
+            isAtomic: false
           });
           seenContent.add(textContent);
         }
       }
     } else if (token.type === 'heading') {
-      const headingText = cleanMarkdownFormatting(token.text);
+      const headingText = token.text.trim();
       if (headingText && !seenContent.has(headingText)) {
+        const htmlContent = tokenToHtml(token);
         blocks.push({
-          type: 'text',
-          content: headingText,
-          isHeading: true,
-          level: token.depth
+          type: 'html',
+          content: htmlContent,
+          isAtomic: false
         });
         seenContent.add(headingText);
       }
     } else if (token.type === 'list') {
-      // 处理列表
-      const listText = token.items
-        .map(item => `• ${cleanMarkdownFormatting(item.text)}`)
-        .join('\n');
-      if (listText && !seenContent.has(listText)) {
+      // 列表作为原子单元，不可拆分
+      const listKey = JSON.stringify(token.items);
+      if (!seenContent.has(listKey)) {
+        const htmlContent = tokenToHtml(token);
         blocks.push({
-          type: 'text',
-          content: listText
+          type: 'html',
+          content: htmlContent,
+          isAtomic: true
         });
-        seenContent.add(listText);
+        seenContent.add(listKey);
+      }
+    } else if (token.type === 'code') {
+      // 代码块作为原子单元，不可拆分
+      const codeKey = token.text;
+      if (!seenContent.has(codeKey)) {
+        const htmlContent = tokenToHtml(token);
+        blocks.push({
+          type: 'html',
+          content: htmlContent,
+          isAtomic: true
+        });
+        seenContent.add(codeKey);
+      }
+    } else if (token.type === 'blockquote') {
+      // 引用块作为原子单元
+      const quoteKey = token.text;
+      if (!seenContent.has(quoteKey)) {
+        const htmlContent = tokenToHtml(token);
+        blocks.push({
+          type: 'html',
+          content: htmlContent,
+          isAtomic: true
+        });
+        seenContent.add(quoteKey);
+      }
+    } else if (token.type === 'table') {
+      // 表格作为原子单元，不可拆分
+      const tableKey = JSON.stringify(token.header) + JSON.stringify(token.rows);
+      if (!seenContent.has(tableKey)) {
+        const htmlContent = tokenToHtml(token);
+        blocks.push({
+          type: 'html',
+          content: htmlContent,
+          isAtomic: true
+        });
+        seenContent.add(tableKey);
       }
     }
   }

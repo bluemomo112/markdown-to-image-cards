@@ -2,3 +2,7 @@
 /node_modules
 /output
 /ref
+/.temp-images
+.DS_Store
+*.log
+test*.md
