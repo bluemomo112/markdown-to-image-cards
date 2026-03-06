@@ -1,4 +1,4 @@
-![Banner](./banner.png)
+![Banner](./banner.jpg)
 
 # Markdown to Image Cards Generator
 
@@ -8,16 +8,16 @@ Convert Markdown files into beautiful image cards with full format support and i
 
 ## Theme Showcase
 
-![Theme Comparison](./theme-comparison.png)
+![Theme Comparison](./theme-comparison.jpg)
 
 ### White Theme
-![White Theme](./demo-white-theme.png)
+![White Theme](./demo-white-theme.jpg)
 
 ### Beige Theme
-![Beige Theme](./demo-beige-theme.png)
+![Beige Theme](./demo-beige-theme.jpg)
 
 ### Dark Theme
-![Dark Theme](./demo-dark-theme.png)
+![Dark Theme](./demo-dark-theme.jpg)
 
 ## Features
 

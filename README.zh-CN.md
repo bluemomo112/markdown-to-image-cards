@@ -1,4 +1,4 @@
-![Banner](./banner.png)
+![Banner](./banner.jpg)
 
 # Markdown to Image Cards Generator
 
@@ -8,16 +8,16 @@
 
 ## 主题展示
 
-![主题对比](./theme-comparison.png)
+![主题对比](./theme-comparison.jpg)
 
 ### 白色主题
-![白色主题示例](./demo-white-theme.png)
+![白色主题示例](./demo-white-theme.jpg)
 
 ### 米色主题
-![米色主题示例](./demo-beige-theme.png)
+![米色主题示例](./demo-beige-theme.jpg)
 
 ### 深色主题
-![深色主题示例](./demo-dark-theme.png)
+![深色主题示例](./demo-dark-theme.jpg)
 
 ## 功能特点
 
