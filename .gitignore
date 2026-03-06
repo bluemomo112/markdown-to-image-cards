@@ -6,3 +6,4 @@
 .DS_Store
 *.log
 test*.md
+.temp-images/
