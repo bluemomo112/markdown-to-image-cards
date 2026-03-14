@@ -1,4 +1,4 @@
-![Banner](./banner.jpg)
+![Banner](./demo/banner.jpg)
 
 # Markdown to Image Cards Generator
 
@@ -8,16 +8,16 @@
 
 ## 主题展示
 
-![主题对比](./theme-comparison.jpg)
+![主题对比](./demo/theme-comparison.jpg)
 
 ### 白色主题
-![白色主题示例](./demo-white-theme.jpg)
+![白色主题示例](./demo/demo-white-theme.jpg)
 
 ### 米色主题
-![米色主题示例](./demo-beige-theme.jpg)
+![米色主题示例](./demo/demo-beige-theme.jpg)
 
 ### 深色主题
-![深色主题示例](./demo-dark-theme.jpg)
+![深色主题示例](./demo/demo-dark-theme.jpg)
 
 ## 功能特点
 
@@ -32,11 +32,40 @@
 
 ## 安装
 
+### 作为独立工具安装
+
 ```bash
+git clone https://github.com/bluemomo112/markdown-to-image-cards.git
+cd markdown-to-image-cards
 npm install
 ```
 
 首次安装会下载 Puppeteer 和 Chromium（约 170MB），请耐心等待。
+
+### 作为 Claude Code Skill 安装
+
+**一键安装：**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bluemomo112/markdown-to-image-cards/main/install-skill.sh | bash
+```
+
+**手动安装：**
+
+```bash
+# Clone 到 skill 目录
+git clone https://github.com/bluemomo112/markdown-to-image-cards.git ~/.agents/skills/2xhs-card
+cd ~/.agents/skills/2xhs-card && npm install
+
+# 创建 skill 注册
+mkdir -p ~/.claude/skills/2xhs-card
+# 复制并编辑 SKILL.md，使用绝对路径（参考 install-skill.sh）
+```
+
+安装后，在 Claude Code 中使用：
+```
+把这个 Markdown 文件转换成图片卡片
+```
 
 ## 使用方法
 

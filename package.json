@@ -1,7 +1,7 @@
 {
-  "name": "text-to-card",
+  "name": "markdown-to-image-cards",
   "version": "1.0.0",
-  "description": "Generate styled image cards from text with auto-pagination",
+  "description": "Convert Markdown files into beautiful image cards with full formatting support",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -9,9 +9,12 @@
     "test": "node src/index.js --title '测试标题' --content '这是一段测试内容，用来验证卡片生成功能是否正常工作。' --theme beige"
   },
   "keywords": [
-    "text-to-image",
+    "markdown",
+    "markdown-to-image",
+    "image-cards",
     "card-generator",
-    "puppeteer"
+    "puppeteer",
+    "claude-code-skill"
   ],
   "author": "",
   "license": "MIT",

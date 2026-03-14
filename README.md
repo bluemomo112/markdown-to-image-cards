@@ -1,4 +1,4 @@
-![Banner](./banner.jpg)
+![Banner](./demo/banner.jpg)
 
 # Markdown to Image Cards Generator
 
@@ -8,16 +8,16 @@ Convert Markdown files into beautiful image cards with full format support and i
 
 ## Theme Showcase
 
-![Theme Comparison](./theme-comparison.jpg)
+![Theme Comparison](./demo/theme-comparison.jpg)
 
 ### White Theme
-![White Theme](./demo-white-theme.jpg)
+![White Theme](./demo/demo-white-theme.jpg)
 
 ### Beige Theme
-![Beige Theme](./demo-beige-theme.jpg)
+![Beige Theme](./demo/demo-beige-theme.jpg)
 
 ### Dark Theme
-![Dark Theme](./demo-dark-theme.jpg)
+![Dark Theme](./demo/demo-dark-theme.jpg)
 
 ## Features
 
@@ -32,11 +32,40 @@ Convert Markdown files into beautiful image cards with full format support and i
 
 ## Installation
 
+### As Standalone Tool
+
 ```bash
+git clone https://github.com/bluemomo112/markdown-to-image-cards.git
+cd markdown-to-image-cards
 npm install
 ```
 
 First installation will download Puppeteer and Chromium (~170MB).
+
+### As Claude Code Skill
+
+**One-line install:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bluemomo112/markdown-to-image-cards/main/install-skill.sh | bash
+```
+
+**Manual install:**
+
+```bash
+# Clone to skill directory
+git clone https://github.com/bluemomo112/markdown-to-image-cards.git ~/.agents/skills/2xhs-card
+cd ~/.agents/skills/2xhs-card && npm install
+
+# Create skill registration
+mkdir -p ~/.claude/skills/2xhs-card
+# Copy and edit SKILL.md with absolute paths (see install-skill.sh for reference)
+```
+
+After installation, you can use it in Claude Code:
+```
+Convert this Markdown file to image cards
+```
 
 ## Usage
 
@@ -90,13 +119,13 @@ node src/index.js --title "Title" --content "Content" --theme white
 
 ## Use as Claude Code Skill
 
-This project includes a `2xhs-card` skill for direct use in Claude Code:
+After installing as a Claude Code Skill (see Installation section), simply tell Claude:
 
 ```
 Convert this Markdown file to image cards
 ```
 
-Claude will automatically recognize and invoke this tool.
+Claude will automatically recognize and invoke this tool with the appropriate parameters.
 
 ## Tech Stack
 

@@ -6,4 +6,10 @@
 .DS_Store
 *.log
 test*.md
+
+# Local development directories (not for repository)
+.claude/
+.agents/
+.agent/
+.trae/
 .temp-images/

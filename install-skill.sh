@@ -1,3 +1,38 @@
+#!/bin/bash
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}Installing 2xhs-card as Claude Code Skill...${NC}\n"
+
+# Define paths
+SKILL_DIR="$HOME/.agents/skills/2xhs-card"
+CLAUDE_SKILL_DIR="$HOME/.claude/skills/2xhs-card"
+
+# Clone or update the tool
+if [ -d "$SKILL_DIR" ]; then
+  echo -e "${YELLOW}Tool directory already exists. Updating...${NC}"
+  cd "$SKILL_DIR" && git pull
+else
+  echo -e "${BLUE}Cloning repository...${NC}"
+  git clone https://github.com/bluemomo112/markdown-to-image-cards.git "$SKILL_DIR"
+fi
+
+# Install dependencies
+echo -e "\n${BLUE}Installing dependencies...${NC}"
+cd "$SKILL_DIR" && npm install
+
+# Create Claude skill directory
+echo -e "\n${BLUE}Setting up Claude Code skill...${NC}"
+mkdir -p "$CLAUDE_SKILL_DIR"
+
+# Generate SKILL.md with absolute paths
+cat > "$CLAUDE_SKILL_DIR/SKILL.md" << EOF
 ---
 name: 2xhs-card
 description: Generate beautiful image cards from Markdown files with rich formatting support (bold, italic, code blocks, lists, tables, quotes). Use when users want to convert Markdown documents into styled image cards for social media, presentations, or visual content. Triggers on requests like "convert this markdown to images", "generate cards from md file", "create image cards", or when working with .md files that need visual representation.
@@ -11,17 +46,12 @@ Convert Markdown files into beautifully styled image cards with full formatting 
 
 ## Quick Start
 
-First install dependencies in the skill directory:
-```bash
-cd <skill-directory> && npm install
-```
-
 Basic usage:
-```bash
-node <skill-directory>/src/index.js --markdown <file.md> --theme <theme> --output <dir>
-```
+\`\`\`bash
+node $SKILL_DIR/src/index.js --markdown <file.md> --theme <theme> --output <dir>
+\`\`\`
 
-Available themes: `white`, `beige`, `dark`, `blue`
+Available themes: \`white\`, \`beige\`, \`dark\`, \`blue\`
 
 ## Core Features
 
@@ -53,28 +83,20 @@ All Markdown elements are rendered with proper styling:
 ## Usage Examples
 
 ### Example 1: Simple Markdown
-```bash
-node src/index.js --markdown document.md --theme white --output ./cards
-```
+\`\`\`bash
+node $SKILL_DIR/src/index.js --markdown document.md --theme white --output ./cards
+\`\`\`
 
 ### Example 2: Different Themes
-```bash
-node src/index.js --markdown document.md --theme beige
-node src/index.js --markdown document.md --theme dark
-```
+\`\`\`bash
+node $SKILL_DIR/src/index.js --markdown document.md --theme beige
+node $SKILL_DIR/src/index.js --markdown document.md --theme dark
+\`\`\`
 
 ### Example 3: Plain Text Mode
-```bash
-node src/index.js --title "Title" --content "Content" --theme white
-```
-
-## Project Structure
-
-- `src/index.js` - CLI entry point
-- `src/generator.js` - Card generation logic
-- `src/markdown-parser.js` - Markdown to HTML conversion
-- `src/templates/` - Card HTML templates
-- `src/themes.js` - Theme definitions
+\`\`\`bash
+node $SKILL_DIR/src/index.js --title "Title" --content "Content" --theme white
+\`\`\`
 
 ## Workflow
 
@@ -83,36 +105,21 @@ When user requests to create cards from Markdown:
 1. **Verify file exists**: Check the .md file path
 2. **Choose theme**: Ask user for theme preference (white/beige/dark/blue) if not specified
 3. **Run generation**:
-   ```bash
-   node src/index.js --markdown <path> --theme <theme> --output <output-dir>
-   ```
+   \`\`\`bash
+   node $SKILL_DIR/src/index.js --markdown <path> --theme <theme> --output <output-dir>
+   \`\`\`
 4. **Report results**: Show generated file paths and page count
-
-## Styling Details
-
-### Code Blocks
-- Background: #f6f8fa (light gray)
-- Font: Monospace (42px, shrinks to 32px if oversized)
-- Padding: 30px
-- Border radius: 12px
-- Line wrapping: Enabled with `white-space: pre-wrap`
-
-### Tables
-- Border: 2px solid #dfe2e5
-- Cell padding: 20px 30px
-- Header background: #f6f8fa
-- Zebra striping: Even rows #f9f9f9
-- Font size: 42px
-
-### Text
-- Base font: PingFang SC, Microsoft YaHei
-- Size: 48px (paragraphs), 42-72px (headings)
-- Line height: 1.8
-- Text alignment: Justified
 
 ## Output
 
 Generated images (1440×2400px PNG):
-- `mixed-{timestamp}-page{N}.png` - Markdown cards
-- `title-{timestamp}.png` - Title cards
-- `content-{timestamp}-page{N}.png` - Content cards
+- \`mixed-{timestamp}-page{N}.png\` - Markdown cards
+- \`title-{timestamp}.png\` - Title cards
+- \`content-{timestamp}-page{N}.png\` - Content cards
+EOF
+
+echo -e "\n${GREEN}✅ Installation complete!${NC}"
+echo -e "${BLUE}📍 Tool location:${NC} $SKILL_DIR"
+echo -e "${BLUE}📍 Skill location:${NC} $CLAUDE_SKILL_DIR"
+echo -e "\n${GREEN}You can now use the skill in Claude Code by saying:${NC}"
+echo -e "  ${YELLOW}\"Convert this markdown to image cards\"${NC}"
